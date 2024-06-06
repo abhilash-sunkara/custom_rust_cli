@@ -38,7 +38,7 @@ fn main() {
                     term.write_line("Exiting command line").expect("TODO: panic message");
                 },
                 "create" => { File::create(if split_words.len() > 1 { split_words[1] } else { "test" }.to_owned() + ".txt", ).expect("TODO: panic message"); },
-                "grep" => term.write_line(&grep_text(split_words[1], split_words[2].to_string()).to_string()).expect("panic"),
+                "grep" => grep_text(split_words[1], split_words[2], split_words[3]),
                 "edit" => {editing_file = edit_file(split_words).parse().unwrap(); is_editing = true},
                 _ => term.write_line("nothing").expect("panic"),
             }
@@ -61,23 +61,42 @@ fn main() {
     term.clear_line().expect("TODO: panic message");
 }
 
-fn grep_text(file : &str, test: String) -> u32{
-    println!("opening file + {file}.txt");
+
+fn grep_text(file : &str, test: &str, dir:&str){
     let contents = fs::read_to_string(file.to_owned()+".txt").expect("panic");
-    println!("{}", contents);
-    match contents.find(&test){
-        None => {0}
-        Some(u) => {
-            println!("{}", &contents[u..contents.len()-1]);
-            u.try_into().unwrap()
+    let mut start_index = 0;
+    let mut end_index = 2;
+    let mut line_list: Vec<String> = Vec::new();
+    for (i, c) in contents.chars().enumerate() {
+        if c == 0xA as char {
+            end_index = i;
+            line_list.push(contents[start_index..end_index].to_string());
+            start_index = i;
         }
     }
-}
-
-fn grep_text_updated(file : &str, test: String){
-    println!("opening file + {file}.txt");
-    let contents = fs::read_to_string(file.to_owned()+".txt").expect("panic");
-
+    match dir {
+        "-c" => {let mut count = 0;
+                for s in line_list{
+                    if s.contains(test){
+                        count += 1;
+                    }
+                }
+                println!("Number of occurrences : {}", count);
+                }
+        "-l" => {for s in line_list{
+                    if s.contains(test){
+                        println!("{}", s.trim());
+                    }
+                }
+                },
+        "-v" => {for s in line_list{
+                    if !s.contains(test){
+                        println!("{}", s.trim());
+                    }
+                }
+        },
+        &_ => {}
+    }
 
 }
 
