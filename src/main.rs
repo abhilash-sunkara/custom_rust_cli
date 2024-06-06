@@ -8,6 +8,8 @@ use std::io::prelude::*;
 use std::path::Path;
 use std::io::prelude::*;
 use std::fs::OpenOptions;
+use std::fs;
+use std::env;
 
 
 fn main() {
@@ -35,7 +37,8 @@ fn main() {
                     prompt = false;
                     term.write_line("Exiting command line").expect("TODO: panic message");
                 },
-                "create" => { let mut file = File::create(if split_words.len() > 1 { split_words[1] } else { "test" }.to_owned() + ".txt", ); },
+                "create" => { File::create(if split_words.len() > 1 { split_words[1] } else { "test" }.to_owned() + ".txt", ).expect("TODO: panic message"); },
+                "grep" => term.write_line(&grep_text(split_words[1], split_words[2].to_string()).to_string()).expect("panic"),
                 "edit" => {editing_file = edit_file(split_words).parse().unwrap(); is_editing = true},
                 _ => term.write_line("nothing").expect("panic"),
             }
@@ -58,6 +61,26 @@ fn main() {
     term.clear_line().expect("TODO: panic message");
 }
 
+fn grep_text(file : &str, test: String) -> u32{
+    println!("opening file + {file}.txt");
+    let contents = fs::read_to_string(file.to_owned()+".txt").expect("panic");
+    println!("{}", contents);
+    match contents.find(&test){
+        None => {0}
+        Some(u) => {
+            println!("{}", &contents[u..contents.len()-1]);
+            u.try_into().unwrap()
+        }
+    }
+}
+
+fn grep_text_updated(file : &str, test: String){
+    println!("opening file + {file}.txt");
+    let contents = fs::read_to_string(file.to_owned()+".txt").expect("panic");
+
+
+}
+
 
 
 fn edit_file(input : Vec<&str>) -> &str {
@@ -70,7 +93,7 @@ fn edit_file(input : Vec<&str>) -> &str {
 }
 
 fn edit_input_string(input : &String) -> String {
-    input[1..input.len()-3].to_string() + "\n"
+    input[1..input.len()-2].to_string() + "\n"
 }
 
 
