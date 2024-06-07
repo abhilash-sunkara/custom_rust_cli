@@ -4,18 +4,13 @@ use std::time::Duration;
 use console::Term;
 use std::io::{self, Write};
 use std::fs::File;
-use std::io::prelude::*;
-use std::path::Path;
-use std::io::prelude::*;
 use std::fs::OpenOptions;
 use std::fs;
-use std::env;
+use console::style;
+
 
 
 fn main() {
-
-    let term = Term::stdout();
-    thread::sleep(Duration::from_millis(2000));
     let mut prompt: bool = true;
     let mut is_editing: bool = false;
     let mut input:String = String::new();
@@ -27,20 +22,20 @@ fn main() {
     while prompt {
         if !is_editing {
             input.clear();
-            term.write_line("Enter a message").expect("TODO: panic message");
+            println!("{}", style("Enter a message").green());
             io::stdin().read_line(&mut input).expect("Failed to read line");
             split_words = input.trim().split_whitespace().collect();
             if split_words.len() < 1 { continue }
             match split_words[0] {
-                "echo" => term.write_line(if split_words.len() > 1 { split_words[1] } else { " " }).expect("panic"),
+                "echo" => println!{"{}", if split_words.len() > 1 {style(split_words[1]).yellow()} else {style(" ").yellow()}},
                 "exit" => {
                     prompt = false;
-                    term.write_line("Exiting command line").expect("TODO: panic message");
+                    println!("{}", style("Exiting command line").red());
                 },
-                "create" => { File::create(if split_words.len() > 1 { split_words[1] } else { "test" }.to_owned() + ".txt", ).expect("TODO: panic message"); },
+                "create" => {create_file(split_words[1], split_words.len())},
                 "grep" => grep_text(split_words[1], split_words[2], split_words[3]),
                 "edit" => {editing_file = edit_file(split_words).parse().unwrap(); is_editing = true},
-                _ => term.write_line("nothing").expect("panic"),
+                _ => println!(),
             }
         } else {
             input.clear();
@@ -58,7 +53,13 @@ fn main() {
             }
         }
     }
-    term.clear_line().expect("TODO: panic message");
+
+    thread::sleep(Duration::from_millis(2000));
+}
+
+fn create_file(file_name : &str, length : usize){
+    File::create(if length > 1 { file_name } else { "test" }.to_owned() + ".txt", ).expect("TODO: panic message");
+    println!("Created file {}.txt", style(file_name).blue());
 }
 
 
@@ -81,17 +82,17 @@ fn grep_text(file : &str, test: &str, dir:&str){
                         count += 1;
                     }
                 }
-                println!("Number of occurrences : {}", count);
+                println!("Number of occurrences : {}", style(count).blue());
                 }
         "-l" => {for s in line_list{
                     if s.contains(test){
-                        println!("{}", s.trim());
+                        println!("{}", style(s.trim()).blue());
                     }
                 }
                 },
         "-v" => {for s in line_list{
                     if !s.contains(test){
-                        println!("{}", s.trim());
+                        println!("{}", style(s.trim()).blue());
                     }
                 }
         },
@@ -106,13 +107,13 @@ fn edit_file(input : Vec<&str>) -> &str {
     if input.len() < 2 {
         println!("No file entered");
     } else {
-        println!("file found : {}.txt", input[1]);
+        println!("file found : {}.txt", style(input[1]).blue());
     }
     input[1]
 }
 
 fn edit_input_string(input : &String) -> String {
-    input[1..input.len()-2].to_string() + "\n"
+    input[1..input.len()-3].to_string() + "\n"
 }
 
 
